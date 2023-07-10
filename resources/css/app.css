@@ -53,5 +53,13 @@
     .btn-secondary {
         @apply bg-white border border-gray-300 text-gray-700 hover:bg-gray-50 focus:bg-gray-50 active:bg-gray-50 focus:ring-primary-500
     }
+
+    .alert {
+        @apply font-medium p-6 rounded-xl;
+    }
+
+    .alert-success {
+        @apply text-green-600 border border-green-500 bg-green-50;
+    }
 }
 
