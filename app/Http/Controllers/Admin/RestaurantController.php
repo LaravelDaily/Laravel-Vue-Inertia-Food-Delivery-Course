@@ -10,6 +10,7 @@ use App\Models\City;
 use App\Models\Restaurant;
 use App\Models\Role;
 use App\Models\User;
+use App\Notifications\RestaurantOwnerInvitation;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\DB;
 use Inertia\Inertia;
@@ -53,6 +54,8 @@ class RestaurantController extends Controller
                 'name'    => $validated['restaurant_name'],
                 'address' => $validated['address'],
             ]);
+
+            $user->notify(new RestaurantOwnerInvitation($validated['restaurant_name']));
         });
 
         return to_route('admin.restaurants.index');
