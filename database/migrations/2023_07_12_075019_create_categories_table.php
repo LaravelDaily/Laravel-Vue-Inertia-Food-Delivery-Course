@@ -14,7 +14,7 @@ return new class extends Migration
     {
         Schema::create('categories', function (Blueprint $table) {
             $table->id();
-            $table->foreignIdFor(Restaurant::class)->constrained();
+            $table->foreignIdFor(Restaurant::class)->constrained()->cascadeOnDelete();
             $table->string('name');
             $table->timestamps();
         });

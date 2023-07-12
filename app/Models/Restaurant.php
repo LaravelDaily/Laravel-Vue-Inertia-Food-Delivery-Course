@@ -21,4 +21,9 @@ class Restaurant extends Model
     {
         return $this->belongsTo(City::class);
     }
+
+    public function categories()
+    {
+        return $this->hasMany(Category::class);
+    }
 }
