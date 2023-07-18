@@ -32,7 +32,7 @@ class StoreProductRequest extends FormRequest
     public function prepareForValidation()
     {
         $this->merge([
-            'price' => (int) $this->price * 100,
+            'price' => (int) ($this->price * 100),
         ]);
     }
 }
