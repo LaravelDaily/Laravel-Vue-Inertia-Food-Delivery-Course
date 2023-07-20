@@ -41,6 +41,13 @@ const showingNavigationDropdown = ref(false)
                 >
                   Restaurant menu
                 </NavLink>
+                <NavLink
+                  v-if="can('order.viewAny')"
+                  :href="route('customer.orders.index')"
+                  :active="route().current('customer.orders.index')"
+                >
+                  My Orders
+                </NavLink>
               </div>
             </div>
 
