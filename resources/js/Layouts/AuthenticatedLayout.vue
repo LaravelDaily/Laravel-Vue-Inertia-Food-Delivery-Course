@@ -45,6 +45,13 @@ const showingNavigationDropdown = ref(false)
             </div>
 
             <div v-if="$page.props.auth.user" class="hidden sm:flex sm:items-center sm:ml-6">
+              <Link
+                v-if="can('cart.add')"
+                :href="route('customer.cart.index')"
+                class="btn btn-primary"
+              >
+                View basket {{ ($page.props.cart.total / 100).toFixed(2) }} &euro;
+              </Link>
               <!-- Settings Dropdown -->
               <div class="ml-3 relative">
                 <Dropdown align="right" width="48">
