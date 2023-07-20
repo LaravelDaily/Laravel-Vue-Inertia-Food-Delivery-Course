@@ -6,6 +6,7 @@ use App\Enums\OrderStatus;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Customer\StoreOrderRequest;
 use App\Models\Order;
+use App\Notifications\NewOrderCreated;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\DB;
 use Inertia\Inertia;
@@ -32,7 +33,7 @@ class OrderController extends Controller
         $user       = $request->user();
         $attributes = $request->validated();
 
-        DB::transaction(function () use ($user, $attributes) {
+        $order = DB::transaction(function () use ($user, $attributes) {
             $order = $user->orders()->create([
                 'restaurant_id' => $attributes['restaurant_id'],
                 'total'         => $attributes['total'],
@@ -40,7 +41,11 @@ class OrderController extends Controller
             ]);
 
             $order->products()->createMany($attributes['items']);
+
+            return $order;
         });
+
+        $order->restaurant->owner->notify(new NewOrderCreated($order));
 
         session()->forget('cart');
 
