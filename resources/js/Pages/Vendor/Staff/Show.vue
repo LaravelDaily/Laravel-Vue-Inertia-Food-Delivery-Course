@@ -2,6 +2,13 @@
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue'
 import { Head } from '@inertiajs/vue3'
 import AddStaffMemberForm from '@/Pages/Vendor/Staff/Partials/AddStaffMemberForm.vue'
+import StaffMemberManager from '@/Pages/Vendor/Staff/Partials/StaffMemberManager.vue'
+
+const props = defineProps({
+  staff: {
+    type: Array
+  }
+})
 </script>
 
 <template>
@@ -16,6 +23,10 @@ import AddStaffMemberForm from '@/Pages/Vendor/Staff/Partials/AddStaffMemberForm
       <div class="max-w-7xl mx-auto sm:px-6 lg:px-8 space-y-6">
         <div v-if="can('user.create')" class="p-4 sm:p-8 bg-white shadow sm:rounded-lg">
           <AddStaffMemberForm />
+        </div>
+
+        <div v-if="can('user.viewAny')" class="p-4 sm:p-8 bg-white shadow sm:rounded-lg">
+          <StaffMemberManager :members="props.staff" />
         </div>
       </div>
     </div>

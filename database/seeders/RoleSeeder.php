@@ -44,7 +44,9 @@ class RoleSeeder extends Seeder
             ->orWhere('name', 'like', 'category.%')
             ->orWhere('name', 'like', 'product.%')
             ->orWhereIn('name', [
+                'user.viewAny',
                 'user.create',
+                'user.delete',
             ]);
 
         $this->createRole(RoleName::VENDOR, $permissions->pluck('id'));
