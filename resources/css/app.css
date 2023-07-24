@@ -27,6 +27,18 @@
         @apply bg-primary-50 text-primary-700 border-primary-300;
     }
 
+    .badge-danger {
+        @apply bg-danger-50 text-danger-700 border-danger-300;
+    }
+
+    .badge-secondary {
+        @apply bg-gray-50 text-gray-700 border-gray-300;
+    }
+
+    .badge-yellow {
+        @apply bg-yellow-50 text-yellow-700 border-yellow-300;
+    }
+
     .text-link {
         @apply text-blue-600 hover:underline;
     }

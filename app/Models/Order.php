@@ -37,4 +37,20 @@ class Order extends Model
     {
         return $this->hasMany(OrderItem::class);
     }
+
+    public function scopeCurrent($query): void
+    {
+        $query->whereIn('status', [
+            OrderStatus::PENDING,
+            OrderStatus::PREPARING,
+        ]);
+    }
+
+    public function scopePast($query): void
+    {
+        $query->whereIn('status', [
+            OrderStatus::READY,
+            OrderStatus::CANCELLED,
+        ]);
+    }
 }

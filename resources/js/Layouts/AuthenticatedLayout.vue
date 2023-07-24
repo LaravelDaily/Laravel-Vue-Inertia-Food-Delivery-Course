@@ -55,6 +55,13 @@ const showingNavigationDropdown = ref(false)
                 >
                   Staff Management
                 </NavLink>
+                <NavLink
+                  v-if="can('order.update')"
+                  :href="route('staff.orders.index')"
+                  :active="route().current('staff.orders.index')"
+                >
+                  Restaurant Orders
+                </NavLink>
               </div>
             </div>
 
