@@ -49,5 +49,9 @@
     .btn-primary {
         @apply bg-primary-500 text-white hover:bg-primary-600 focus:bg-primary-600 active:bg-primary-500 focus:ring-primary-500
     }
+
+    .btn-secondary {
+        @apply bg-white border border-gray-300 text-gray-700 hover:bg-gray-50 focus:bg-gray-50 active:bg-gray-50 focus:ring-primary-500
+    }
 }
 
