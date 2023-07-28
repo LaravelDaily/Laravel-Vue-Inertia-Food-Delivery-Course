@@ -39,10 +39,24 @@ class UserFactory extends Factory
         ]);
     }
 
+    public function admin()
+    {
+        return $this->afterCreating(function (User $user) {
+            $user->roles()->sync(Role::where('name', RoleName::ADMIN->value)->first());
+        });
+    }
+
     public function vendor()
     {
         return $this->afterCreating(function (User $user) {
             $user->roles()->sync(Role::where('name', RoleName::VENDOR->value)->first());
+        });
+    }
+
+    public function customer()
+    {
+        return $this->afterCreating(function (User $user) {
+            $user->roles()->sync(Role::where('name', RoleName::CUSTOMER->value)->first());
         });
     }
 
