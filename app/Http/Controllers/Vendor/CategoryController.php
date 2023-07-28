@@ -6,12 +6,18 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\Vendor\StoreCategoryRequest;
 use App\Http\Requests\Vendor\UpdateCategoryRequest;
 use App\Models\Category;
+use App\Services\CategoryService;
 use Illuminate\Http\RedirectResponse;
 use Inertia\Inertia;
 use Inertia\Response;
 
 class CategoryController extends Controller
 {
+    public function __construct(
+        public CategoryService $categoryService
+    ) {
+    }
+
     public function create(): Response
     {
         $this->authorize('category.create');
@@ -21,7 +27,10 @@ class CategoryController extends Controller
 
     public function store(StoreCategoryRequest $request): RedirectResponse
     {
-        $request->user()->restaurant->categories()->create($request->only('name'));
+        $this->categoryService->createCategory(
+            $request->user()->restaurant,
+            $request->validated()
+        );
 
         return to_route('vendor.menu')
             ->withStatus('Product Category created successfully.');
@@ -36,15 +45,20 @@ class CategoryController extends Controller
 
     public function update(UpdateCategoryRequest $request, Category $category): RedirectResponse
     {
-        $category->update($request->only('name'));
+        $this->categoryService->updateCategory(
+            $category,
+            $request->validated()
+        );
 
-        return to_route('vendor.menu')->withStatus('Product Category updated successfully.');
+        return to_route('vendor.menu')
+            ->withStatus('Product Category updated successfully.');
     }
 
     public function destroy(Category $category)
     {
-        $category->delete();
+        $this->categoryService->deleteCategory($category);
 
-        return to_route('vendor.menu')->withStatus('Product Category deleted successfully.');
+        return to_route('vendor.menu')
+            ->withStatus('Product Category deleted successfully.');
     }
 }

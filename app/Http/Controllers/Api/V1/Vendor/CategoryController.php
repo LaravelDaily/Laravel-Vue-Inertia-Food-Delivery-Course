@@ -8,30 +8,33 @@ use App\Http\Requests\Vendor\UpdateCategoryRequest;
 use App\Http\Resources\Api\V1\Vendor\CategoryCollection;
 use App\Http\Resources\Api\V1\Vendor\CategoryResource;
 use App\Models\Category;
+use App\Services\CategoryService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 
 class CategoryController extends Controller
 {
+    public function __construct(
+        public CategoryService $categoryService
+    ) {
+    }
+
     public function index(Request $request): CategoryCollection
     {
         $this->authorize('category.viewAny');
 
-        $categories = Category::when(
-            $request->boolean('products'),
-            fn ($q) => $q->with('products')
-        )
-            ->where('restaurant_id', auth()->user()->restaurant->id)
-            ->get();
-
-        return new CategoryCollection($categories);
+        return new CategoryCollection($this->categoryService->getRestaurantCategories(
+            withProducts: $request->boolean('products')
+        ));
     }
 
     public function store(StoreCategoryRequest $request): CategoryResource
     {
-        $restaurant = $request->user()->restaurant;
-        $category   = $restaurant->categories()->create($request->validated());
+        $category = $this->categoryService->createCategory(
+            $request->user()->restaurant,
+            $request->validated()
+        );
 
         return new CategoryResource($category);
     }
@@ -45,7 +48,10 @@ class CategoryController extends Controller
 
     public function update(UpdateCategoryRequest $request, Category $category): JsonResponse
     {
-        $category->update($request->validated());
+        $this->categoryService->updateCategory(
+            $category,
+            $request->validated()
+        );
 
         return (new CategoryResource($category))
             ->response()
@@ -56,7 +62,7 @@ class CategoryController extends Controller
     {
         $this->authorize('category.delete');
 
-        $category->delete();
+        $this->categoryService->deleteCategory($category);
 
         return response()->noContent();
     }
