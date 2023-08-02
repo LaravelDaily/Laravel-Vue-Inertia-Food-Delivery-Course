@@ -7,13 +7,18 @@ use App\Http\Requests\Vendor\StoreProductRequest;
 use App\Http\Requests\Vendor\UpdateProductRequest;
 use App\Http\Resources\Api\V1\Vendor\ProductResource;
 use App\Models\Product;
+use App\Services\ProductService;
 use Illuminate\Http\Response;
 
 class ProductController extends Controller
 {
+    public function __construct(public ProductService $productService)
+    {
+    }
+
     public function store(StoreProductRequest $request): ProductResource
     {
-        $product = Product::create($request->validated());
+        $product = $this->productService->createProduct($request->validated());
 
         return new ProductResource($product);
     }
@@ -29,7 +34,7 @@ class ProductController extends Controller
 
     public function update(UpdateProductRequest $request, Product $product)
     {
-        $product->update($request->validated());
+        $product = $this->productService->updateProduct($product, $request->validated());
 
         return (new ProductResource($product))
             ->response()
@@ -40,7 +45,7 @@ class ProductController extends Controller
     {
         $this->authorize('product.delete');
 
-        $product->delete();
+        $this->productService->deleteProduct($product);
 
         return response()->noContent();
     }
