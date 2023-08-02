@@ -20,3 +20,4 @@ Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
 
 include __DIR__ . '/api/v1/admin.php';
 include __DIR__ . '/api/v1/vendor.php';
+include __DIR__ . '/api/v1/customer.php';
