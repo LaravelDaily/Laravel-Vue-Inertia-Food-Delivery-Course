@@ -2,7 +2,9 @@
 
 namespace Tests\Feature\Web;
 
+use App\Enums\OrderStatus;
 use App\Models\Product;
+use App\Models\Restaurant;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Inertia\Testing\AssertableInertia;
@@ -51,5 +53,61 @@ class OrderTest extends TestCase
             return $page->component('Customer/Orders')
                 ->has('orders');
         });
+    }
+
+    public function test_staff_members_can_see_orders(): void
+    {
+        $staff = User::factory()->staff()->create();
+
+        $response = $this
+            ->actingAs($staff)
+            ->get(route('staff.orders.index'));
+
+        $response->assertInertia(function (AssertableInertia $page) {
+            return $page->component('Staff/Orders')
+                ->has('current_orders')
+                ->has('past_orders')
+                ->has('order_status');
+        });
+    }
+
+    public function test_staff_can_update_order(): void
+    {
+        $customer   = User::factory()->customer()->create();
+        $restaurant = Restaurant::first();
+        $product    = $restaurant->categories()->first()
+            ->products()->first();
+
+        $this->actingAs($customer)->post(route('customer.cart.add', $product));
+        $this->actingAs($customer)->post(route('customer.orders.store'));
+
+        $staff = $restaurant->staff()->first();
+        $order = $restaurant->orders()->first();
+
+        $request = $this->actingAs($staff)->put(route('staff.orders.update', $order), [
+            'status' => OrderStatus::PREPARING->value,
+        ]);
+
+        $request->assertRedirect()->assertSessionDoesntHaveErrors();
+    }
+
+    public function test_staff_cant_update_order_with_invalid_status(): void
+    {
+        $customer   = User::factory()->customer()->create();
+        $restaurant = Restaurant::first();
+        $product    = $restaurant->categories()->first()
+            ->products()->first();
+
+        $this->actingAs($customer)->post(route('customer.cart.add', $product));
+        $this->actingAs($customer)->post(route('customer.orders.store'));
+
+        $staff = $restaurant->staff()->first();
+        $order = $restaurant->orders()->first();
+
+        $request = $this->actingAs($staff)->put(route('staff.orders.update', $order), [
+            'status' => 'invalid_random_status',
+        ]);
+
+        $request->assertRedirect()->assertSessionHasErrors(['status']);
     }
 }

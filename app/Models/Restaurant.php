@@ -28,8 +28,13 @@ class Restaurant extends Model
         return $this->belongsTo(City::class);
     }
 
-    public function categories()
+    public function categories(): HasMany
     {
         return $this->hasMany(Category::class);
+    }
+
+    public function orders(): HasMany
+    {
+        return $this->hasMany(Order::class);
     }
 }
