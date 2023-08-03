@@ -2,18 +2,19 @@
 
 namespace App\Http\Controllers\Api\V1\Vendor;
 
-use App\Enums\RoleName;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Vendor\StoreStaffMemberRequest;
 use App\Http\Resources\Api\V1\Vendor\StaffMemberCollection;
 use App\Http\Resources\Api\V1\Vendor\StaffMemberResource;
-use App\Models\Role;
-use App\Notifications\RestaurantStaffInvitation;
+use App\Services\StaffMemberService;
 use Illuminate\Http\Response;
-use Illuminate\Support\Facades\DB;
 
 class StaffMemberController extends Controller
 {
+    public function __construct(public StaffMemberService $staffMemberService)
+    {
+    }
+
     public function index()
     {
         $this->authorize('user.viewAny');
@@ -25,22 +26,10 @@ class StaffMemberController extends Controller
 
     public function store(StoreStaffMemberRequest $request): StaffMemberResource
     {
-        $restaurant = $request->user()->restaurant;
-        $attributes = $request->validated();
-
-        $member = DB::transaction(function () use ($attributes, $restaurant) {
-            $user = $restaurant->staff()->create([
-                'name'     => $attributes['name'],
-                'email'    => $attributes['email'],
-                'password' => '',
-            ]);
-
-            $user->roles()->sync(Role::where('name', RoleName::STAFF->value)->first());
-
-            return $user;
-        });
-
-        $member->notify(new RestaurantStaffInvitation($restaurant->name));
+        $member = $this->staffMemberService->createMember(
+            $request->user()->restaurant,
+            $request->validated()
+        );
 
         return new StaffMemberResource($member);
     }
@@ -49,11 +38,12 @@ class StaffMemberController extends Controller
     {
         $this->authorize('user.delete');
 
-        $restaurant = auth()->user()->restaurant;
-        $member     = $restaurant->staff()->findOrFail($staffMemberId);
+        $deleted = $this->staffMemberService->deleteMember(
+            auth()->user()->restaurant,
+            $staffMemberId
+        );
 
-        $member->roles()->sync([]);
-        $member->delete();
+        abort_if(! $deleted, Response::HTTP_NOT_FOUND);
 
         return response()->noContent();
     }
