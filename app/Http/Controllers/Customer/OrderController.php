@@ -2,20 +2,16 @@
 
 namespace App\Http\Controllers\Customer;
 
-use App\Enums\OrderStatus;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Customer\StoreOrderRequest;
-use App\Models\Order;
-use App\Notifications\NewOrderCreated;
-use App\Services\CartService;
+use App\Services\OrderService;
 use Illuminate\Http\RedirectResponse;
-use Illuminate\Support\Facades\DB;
 use Inertia\Inertia;
 use Inertia\Response;
 
 class OrderController extends Controller
 {
-    public function __construct(public CartService $cart)
+    public function __construct(public OrderService $orderService)
     {
     }
 
@@ -23,36 +19,17 @@ class OrderController extends Controller
     {
         $this->authorize('order.viewAny');
 
-        $orders = Order::with(['restaurant', 'products'])
-            ->where('customer_id', auth()->id())
-            ->latest()
-            ->get();
-
         return Inertia::render('Customer/Orders', [
-            'orders' => $orders,
+            'orders' => $this->orderService->getCustomerOrders(),
         ]);
     }
 
     public function store(StoreOrderRequest $request): RedirectResponse
     {
-        $user       = $request->user();
-        $attributes = $request->validated();
-
-        $order = DB::transaction(function () use ($user, $attributes) {
-            $order = $user->orders()->create([
-                'restaurant_id' => $attributes['restaurant_id'],
-                'total'         => $attributes['total'],
-                'status'        => OrderStatus::PENDING,
-            ]);
-
-            $order->products()->createMany($attributes['items']);
-
-            return $order;
-        });
-
-        $order->restaurant->owner->notify(new NewOrderCreated($order));
-
-        $this->cart->flush();
+        $this->orderService->placeOrder(
+            $request->user(),
+            $request->validated()
+        );
 
         return to_route('customer.orders.index')
             ->withStatus('Order accepted.');
