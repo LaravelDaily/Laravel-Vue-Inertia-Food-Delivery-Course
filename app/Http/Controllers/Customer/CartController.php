@@ -4,13 +4,19 @@ namespace App\Http\Controllers\Customer;
 
 use App\Http\Controllers\Controller;
 use App\Models\Product;
+use App\Services\CartService;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Http\Response as HttpResponse;
 use Illuminate\Support\Facades\Validator;
 use Inertia\Inertia;
 use Inertia\Response;
 
 class CartController extends Controller
 {
+    public function __construct(public CartService $cart)
+    {
+    }
+
     public function index(): Response
     {
         return Inertia::render('Customer/Cart');
@@ -20,62 +26,34 @@ class CartController extends Controller
     {
         $this->authorize('cart.add');
 
-        $restaurant = $product->category->restaurant;
-
-        $cart = session('cart', [
-            'items'           => [],
-            'total'           => 0,
-            'restaurant_name' => '',
-            'restaurant_id'   => '',
-        ]);
-
-        $validator = Validator::make($cart, [
+        $validator = Validator::make($this->cart->all(), [
             'items'                 => ['array'],
-            'items.*.restaurant_id' => ['required', 'in:' . $restaurant->id],
+            'items.*.restaurant_id' => [
+                'required',
+                'in:' . $product->category->restaurant->id,
+            ],
         ]);
 
         if ($validator->fails()) {
             return back()->withErrors(['message' => 'Can\'t add product from different vendor.']);
         }
 
-        $item                  = $product->toArray();
-        $item['uuid']          = (string) str()->uuid();
-        $item['restaurant_id'] = $restaurant->id;
-
-        session()->push('cart.items', $item);
-        session()->put('cart.restaurant_name', $restaurant->name);
-        session()->put('cart.restaurant_id', $restaurant->id);
-
-        $this->updateTotal();
+        $this->cart->addItem($product);
 
         return back();
     }
 
     public function remove(string $uuid)
     {
-        $items = collect(session('cart.items'))
-            ->reject(function ($item) use ($uuid) {
-                return $item['uuid'] == $uuid;
-            });
-
-        session(['cart.items' => $items->values()->toArray()]);
-
-        $this->updateTotal();
+        abort_if(! $this->cart->removeItem($uuid), HttpResponse::HTTP_NOT_FOUND);
 
         return back();
     }
 
     public function destroy()
     {
-        session()->forget('cart');
+        $this->cart->flush();
 
         return back();
-    }
-
-    protected function updateTotal(): void
-    {
-        $items = collect(session('cart.items'));
-
-        session()->put('cart.total', $items->sum('price'));
     }
 }

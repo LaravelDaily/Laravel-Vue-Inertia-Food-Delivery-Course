@@ -2,6 +2,7 @@
 
 namespace App\Http\Requests\Customer;
 
+use App\Services\CartService;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Support\Facades\Gate;
 
@@ -27,12 +28,12 @@ class StoreOrderRequest extends FormRequest
 
     protected function prepareForValidation(): void
     {
-        $cart = session('cart');
+        $cart = new CartService();
 
         $this->merge([
-            'restaurant_id' => $cart['restaurant_id'],
-            'items'         => $cart['items'],
-            'total'         => $cart['total'],
+            'restaurant_id' => $cart->restaurantId(),
+            'items'         => $cart->items(),
+            'total'         => $cart->total(),
         ]);
     }
 }

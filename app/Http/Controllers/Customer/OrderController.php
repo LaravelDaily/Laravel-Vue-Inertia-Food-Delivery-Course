@@ -7,6 +7,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\Customer\StoreOrderRequest;
 use App\Models\Order;
 use App\Notifications\NewOrderCreated;
+use App\Services\CartService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\DB;
 use Inertia\Inertia;
@@ -14,6 +15,10 @@ use Inertia\Response;
 
 class OrderController extends Controller
 {
+    public function __construct(public CartService $cart)
+    {
+    }
+
     public function index(): Response
     {
         $this->authorize('order.viewAny');
@@ -47,7 +52,7 @@ class OrderController extends Controller
 
         $order->restaurant->owner->notify(new NewOrderCreated($order));
 
-        session()->forget('cart');
+        $this->cart->flush();
 
         return to_route('customer.orders.index')
             ->withStatus('Order accepted.');

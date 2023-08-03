@@ -2,6 +2,7 @@
 
 namespace App\Http\Middleware;
 
+use App\Services\CartService;
 use Illuminate\Http\Request;
 use Inertia\Middleware;
 use Tightenco\Ziggy\Ziggy;
@@ -41,12 +42,7 @@ class HandleInertiaRequests extends Middleware
                 ]);
             },
             'status' => session('status'),
-            'cart'   => session('cart', [
-                'items'           => [],
-                'total'           => 0,
-                'restaurant_name' => '',
-                'restaurant_id'   => '',
-            ]),
+            'cart'   => (new CartService())->all(),
         ]);
     }
 }
