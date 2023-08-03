@@ -6,28 +6,21 @@ use App\Enums\OrderStatus;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Staff\UpdateOrderRequest;
 use App\Models\Order;
+use App\Services\OrderService;
 use Inertia\Inertia;
 use Inertia\Response;
 
 class OrderController extends Controller
 {
+    public function __construct(public OrderService $orderService)
+    {
+    }
+
     public function index(): Response
     {
-        $currentOrders = Order::current()
-            ->with(['customer', 'products'])
-            ->where('restaurant_id', auth()->user()->restaurant_id)
-            ->latest()
-            ->get();
-
-        $pastOrders = Order::past()
-            ->with(['customer', 'products'])
-            ->where('restaurant_id', auth()->user()->restaurant_id)
-            ->latest()
-            ->get();
-
         return Inertia::render('Staff/Orders', [
-            'current_orders' => $currentOrders,
-            'past_orders'    => $pastOrders,
+            'current_orders' => $this->orderService->getCurrentOrders(),
+            'past_orders'    => $this->orderService->getPastOrders(),
             'order_status'   => OrderStatus::toArray(),
         ]);
     }
@@ -37,7 +30,7 @@ class OrderController extends Controller
         $order = Order::where('restaurant_id', $request->user()->restaurant_id)
             ->findOrFail($orderId);
 
-        $order->update($request->validated());
+        $this->orderService->updateOrder($order, $request->validated());
 
         return back();
     }

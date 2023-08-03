@@ -7,31 +7,24 @@ use App\Http\Requests\Staff\UpdateOrderRequest;
 use App\Http\Resources\Api\V1\Staff\OrderCollection;
 use App\Http\Resources\Api\V1\Staff\OrderResource;
 use App\Models\Order;
+use App\Services\OrderService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Response;
 
 class OrderController extends Controller
 {
+    public function __construct(public OrderService $orderService)
+    {
+    }
+
     public function index(): OrderCollection
     {
-        $orders = Order::current()
-            ->with(['customer', 'products'])
-            ->where('restaurant_id', auth()->user()->restaurant_id)
-            ->latest()
-            ->get();
-
-        return new OrderCollection($orders);
+        return new OrderCollection($this->orderService->getCurrentOrders());
     }
 
     public function past(): OrderCollection
     {
-        $orders = Order::past()
-            ->with(['customer', 'products'])
-            ->where('restaurant_id', auth()->user()->restaurant_id)
-            ->latest()
-            ->get();
-
-        return new OrderCollection($orders);
+        return new OrderCollection($this->orderService->getPastOrders());
     }
 
     public function update(UpdateOrderRequest $request, $orderId): JsonResponse
@@ -39,7 +32,7 @@ class OrderController extends Controller
         $order = Order::where('restaurant_id', $request->user()->restaurant_id)
             ->findOrFail($orderId);
 
-        $order->update($request->validated());
+        $order = $this->orderService->updateOrder($order, $request->validated());
 
         return (new OrderResource($order))
             ->response()

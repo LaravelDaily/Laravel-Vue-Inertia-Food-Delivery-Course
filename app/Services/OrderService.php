@@ -45,4 +45,35 @@ class OrderService
 
         return $order;
     }
+
+    public function getOrders(?string $period = null): Collection
+    {
+        $query = Order::query()->with(['customer', 'products'])
+            ->where('restaurant_id', auth()->user()->restaurant_id);
+
+        match ($period) {
+            'current' => $query->current()->latest(),
+            'past'    => $query->past()->latest('updated_at'),
+            default   => $query->latest(),
+        };
+
+        return $query->get();
+    }
+
+    public function getCurrentOrders(): Collection
+    {
+        return $this->getOrders('current');
+    }
+
+    public function getPastOrders(): Collection
+    {
+        return $this->getOrders('past');
+    }
+
+    public function updateOrder(Order $order, array $attributes): Order
+    {
+        $order->update($attributes);
+
+        return $order;
+    }
 }
