@@ -13,7 +13,7 @@ class RestaurantService
 {
     public function createRestaurant(array $attributes): Restaurant
     {
-        $restaurant = DB::transaction(function () use ($attributes) {
+        return DB::transaction(function () use ($attributes) {
             $user = User::create([
                 'name'     => $attributes['owner_name'],
                 'email'    => $attributes['email'],
@@ -22,16 +22,16 @@ class RestaurantService
 
             $user->roles()->sync(Role::where('name', RoleName::VENDOR->value)->first());
 
-            return $user->restaurant()->create([
+            $restaurant = $user->restaurant()->create([
                 'city_id' => $attributes['city_id'],
                 'name'    => $attributes['restaurant_name'],
                 'address' => $attributes['address'],
             ]);
 
             $user->notify(new RestaurantOwnerInvitation($attributes['restaurant_name']));
-        });
 
-        return $restaurant;
+            return $restaurant;
+        });
     }
 
     public function updateRestaurant(Restaurant $restaurant, array $attributes): Restaurant
